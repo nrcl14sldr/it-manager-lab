@@ -1,0 +1,39 @@
+name: Terraform Validate
+
+on:
+  push:
+    paths:
+      - '**/*.tf'
+      - '.github/workflows/terraform.yml'
+  pull_request:
+    paths:
+      - '**/*.tf'
+      - '.github/workflows/terraform.yml'
+
+jobs:
+  terraform-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Init
+        run: |
+          for d in $(find . -type f -name "*.tf" -exec dirname {} \; | sort -u); do
+            echo "Initializing $d"
+            (cd "$d" && terraform init -backend=false)
+          done
+
+      - name: Terraform Validate
+        run: |
+          for d in $(find . -type f -name "*.tf" -exec dirname {} \; | sort -u); do
+            echo "Validating $d"
+            (cd "$d" && terraform validate)
+          done
+
